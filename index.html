@@ -1,0 +1,460 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>أذكار الصباح والمساء</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
+    
+    <!-- FontAwesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <!-- إعدادات Tailwind المخصصة -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        islamic: {
+                            light: '#f4f9f4',
+                            green: '#2d6a4f',
+                            dark: '#1b4332',
+                            gold: '#d4af37',
+                            goldlight: '#f9f1d8'
+                        }
+                    },
+                    fontFamily: {
+                        'amiri': ['Amiri', 'serif'],
+                        'tajawal': ['Tajawal', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+
+    <!-- تنسيقات مخصصة إضافية -->
+    <style>
+        body {
+            font-family: 'Tajawal', sans-serif;
+            background-color: #f4f9f4;
+            /* نمط زخرفي خفيف للخلفية */
+            background-image: radial-gradient(#d4af3733 1px, transparent 1px);
+            background-size: 20px 20px;
+            -webkit-tap-highlight-color: transparent; /* إخفاء وميض اللمس في الهواتف */
+        }
+        
+        .dhikr-text {
+            font-family: 'Amiri', serif;
+            line-height: 1.9;
+        }
+
+        .card-completed {
+            background-color: #e8f5e9 !important;
+            border-color: #81c784 !important;
+            opacity: 0.8;
+            transition: all 0.5s ease;
+        }
+
+        .counter-btn {
+            transition: transform 0.1s cubic-bezier(0.4, 0, 0.2, 1), background-color 0.3s ease;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        }
+        
+        .counter-btn:active {
+            transform: scale(0.90); /* تأثير النقر */
+            box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+        }
+
+        .progress-bar-fill {
+            transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
+        /* تحسين شريط التمرير */
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #2d6a4f;
+            border-radius: 10px;
+        }
+
+        /* تأثير الظهور التدريجي للبطاقات */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .animate-fade-in {
+            animation: fadeIn 0.4s ease-out forwards;
+        }
+    </style>
+    <link rel="manifest" href="manifest.webmanifest">
+    <meta name="theme-color" content="#1b4332">
+    <link rel="apple-touch-icon" href="icons/icon-192.png">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-title" content="الأذكار">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+</head>
+<body class="text-gray-800 antialiased min-h-screen flex flex-col pb-20">
+
+    <!-- شريط علوي ثابت -->
+    <header class="sticky top-0 z-50 bg-islamic-dark text-white shadow-lg rounded-b-2xl">
+        <div class="max-w-2xl mx-auto px-4 py-4">
+            <h1 class="text-2xl font-bold text-center text-islamic-goldlight mb-4">
+                <i class="fa-solid fa-moon mr-2 text-islamic-gold"></i>
+                أذكار المسلم
+                <i class="fa-solid fa-sun ml-2 text-islamic-gold"></i>
+            </h1>
+            
+            <!-- زر تثبيت التطبيق (مخفي افتراضياً، يظهر إذا كان المتصفح يدعم التثبيت) -->
+            <div id="install-container" class="hidden flex justify-center mb-4">
+                <button id="install-btn" class="bg-islamic-gold text-islamic-dark px-4 py-1.5 rounded-full text-sm font-bold shadow-md hover:bg-yellow-500 transition-all flex items-center">
+                    <i class="fa-solid fa-download mr-2 ml-2"></i> 
+                    <span>تثبيت التطبيق على الهاتف</span>
+                </button>
+            </div>
+
+            <!-- أزرار التبديل بين الصباح والمساء -->
+            <div class="flex bg-islamic-green rounded-lg p-1 mb-4 shadow-inner">
+                <button onclick="switchCategory('morning')" id="btn-morning" class="flex-1 py-2 rounded-md font-bold transition-all bg-islamic-goldlight text-islamic-dark shadow">
+                    أذكار الصباح
+                </button>
+                <button onclick="switchCategory('evening')" id="btn-evening" class="flex-1 py-2 rounded-md font-bold transition-all text-white hover:bg-white/10">
+                    أذكار المساء
+                </button>
+            </div>
+
+            <!-- شريط التقدم -->
+            <div class="flex items-center justify-between text-sm mb-1 text-islamic-light">
+                <span>مستوى الإنجاز</span>
+                <span id="progress-text" class="font-bold">0%</span>
+            </div>
+            <div class="w-full bg-islamic-green rounded-full h-2.5 overflow-hidden">
+                <div id="progress-bar" class="bg-islamic-gold h-2.5 rounded-full progress-bar-fill" style="width: 0%"></div>
+            </div>
+        </div>
+    </header>
+
+    <!-- حاوية الأذكار -->
+    <main class="flex-1 max-w-2xl mx-auto w-full px-4 py-6" id="azkar-container">
+        <!-- سيتم حقن الأذكار هنا بواسطة جافاسكربت -->
+    </main>
+
+    <!-- رسالة إتمام الأذكار (مخفية افتراضياً) -->
+    <div id="completion-message" class="hidden fixed bottom-10 left-1/2 transform -translate-x-1/2 bg-islamic-green text-white px-6 py-3 rounded-full shadow-2xl z-50 text-center border-2 border-islamic-gold animate-fade-in">
+        <i class="fa-solid fa-check-circle text-islamic-gold mr-2 text-xl align-middle"></i>
+        <span class="font-bold text-lg align-middle">تقبل الله طاعتكم! أتممت الأذكار.</span>
+    </div>
+
+    <!-- كود جافاسكربت للتفاعل -->
+    <script>
+        // البيانات المستخرجة من الملف المرفق
+        const azkarData = {
+            morning: [
+                { id: 'm1', text: 'آية الكرسي: (اللَّهُ لَا إِلَٰهَ إِلَّا هُوَ الْحَيُّ الْقَيُّومُ ۚ لَا تَأْخُذُهُ سِنَةٌ وَلَا نَوْمٌ ۚ ...)', target: 1 },
+                { id: 'm2', text: 'قل هو الله أحد والمعوذتين (تكفيك من كل شئ).', target: 3 },
+                { id: 'm3', text: 'حسبي الله لا إله إلا هو عليه توكلت وهو رب العرش العظيم.', target: 7 },
+                { id: 'm4', text: 'بسم الله الذي لا يضر مع اسمه شئ في الأرض ولا في السماء وهو السميع العليم.', target: 3 },
+                { id: 'm5', text: 'رضيت بالله ربا ، وبالإسلام دينا ، وبمحمد نبيا.', target: 3 },
+                { id: 'm6', text: 'يا حي يا قيوم برحمتك أستغيث أصلح لي شأني كله ،ولا تكلني إلى نفسي طرفة عين.', target: 1 },
+                { id: 'm7', text: 'اللهم عافني في بدني ، اللهم عافني في سمعي ، اللهم عافني في بصري ، لا إله إلا أنت ، اللهم إني أعوذ بك من الكفر و الفقر ، وأعوذ بك من عذاب القبر ، لا إله إلا أنت.', target: 3 },
+                { id: 'm8', text: 'اللهم أنت ربي لا إله إلا أنت خلقتني وأنا عبدك ، وأنا على عهدك ووعدك ما استطعت ، أعوذ بك من شر ما صنعت ، أبوء لك بنعمتك علي ، وأبوء بذنبي ، فاغفر لی فإنه لا يغفر الذنوب إلا أنت.', target: 1 },
+                { id: 'm9', text: 'اللهم عالم الغيب والشهادة فاطر السموات والأرض ، رب كل شئ ومليكه ، أشهد أن لا إله إلا أنت ، أعوذ بك من شر نفسي ، ومن شر الشيطان وشركه ، وأن أقترف على نفسي سوءا أو أجره إلى مسلم.', target: 1 },
+                { id: 'm10', text: 'اللهم إني أسألك العافية في الدنيا والآخرة ، اللهم إني أسألك العفو و العافية في ديني ودنيای ، واهلي ، ومالی ، اللهم استر عوراتی ، وآمن روعاتي ، اللهم احفظني من بين يدي ومن خلفي وعن يميني وعن شمالي ، ومن فوقي ، وأعوذ بعظمتك أن أغتال من تحتي.', target: 1 },
+                { id: 'm11', text: 'اللهم بك أصبحنا وبك أمسينا وبك نحيا ، وبك نموت وإليك النشور.', target: 1 },
+                { id: 'm12', text: 'اللهم إنى اصبحت اشهدك وأشهد حملة عرشك ، وملائكتك وجميع خلقك انك انت الله لا إله إلا أنت وحدك لا شريك لك وأن محمدا عبدك ورسولك.', target: 4 },
+                { id: 'm13', text: 'أصبحنا و أصبح الملك لله ، و الحمد لله ، لا إله إلا الله وحده لا شريك له ، له الملك وله الحمد وهو على كل شئ قدير ، رب أسألك خير ما في هذا اليوم وخير ما بعده ، وأعوذ بك من شر هذا اليوم ، وشر ما بعده ، رب أعوذ بك من الكسل وسوء الكبر ، رب أعوذ بك من عذاب في النار ، وعذاب في القبر.', target: 1 },
+                { id: 'm14', text: 'أصبحنا على فطرة الإسلام ، وعلى كلمة الإخلاص ، وعلى دين نبينا محمد وعلى ملة أبينا إبراهيم حنيفا مسلما و ما كان من المشركين.', target: 1 },
+                { id: 'm15', text: 'سبحان الله وبحمده.', target: 100 },
+                { id: 'm16', text: 'لا إله إلا الله وحده لا شريك له ، له الملك وله الحمد ، وهو على كل شئ قدير.', target: 100 },
+                { id: 'm17', text: 'سبحان الله وبحمده عدد خلقه ورضا نفسه وزنة عرشه ومداد كلماته.', target: 3 },
+                { id: 'm18', text: 'اللهم ما أصبح بي من نعمة أو بأحد من خلقك ، فمنك وحدك لا شريك لك ، فلك الحمد ولك الشكر.', target: 1 },
+                { id: 'm19', text: 'أعوذ بكلمات الله التامات من شر ما خلق.', target: 3 },
+                { id: 'm20', text: 'الصلاة الإبراهيمية (اللهم صل على محمد...).', target: 10 }
+            ],
+            evening: [
+                { id: 'e1', text: 'آية الكرسي: (اللَّهُ لَا إِلَٰهَ إِلَّا هُوَ الْحَيُّ الْقَيُّومُ ۚ ...)', target: 1 },
+                { id: 'e2', text: 'أواخر سورة البقرة: (آمَنَ الرَّسُولُ بِمَا أُنْزِلَ إِلَيْهِ مِنْ رَبِّهِ وَالْمُؤْمِنُونَ ۚ ...)', target: 1 },
+                { id: 'e3', text: 'قل هو الله أحد والمعوذتين (تكفيك من كل شی).', target: 3 },
+                { id: 'e4', text: 'حسبي الله لا إله إلا هو عليه توكلت وهو رب العرش العظيم.', target: 7 },
+                { id: 'e5', text: 'بسم الله الذي لا يضر مع اسمه شئ في الأرض ولا في السماء وهو السميع العليم.', target: 3 },
+                { id: 'e6', text: 'رضيت بالله ربا ، وبالإسلام دينا ، وبمحمد نبيا.', target: 3 },
+                { id: 'e7', text: 'يا حي يا قيوم برحمتك أستغيث أصلح لي شأني كله ،ولا تكلني إلى نفسي طرفة عين.', target: 1 },
+                { id: 'e8', text: 'اللهم عافني في بدني ، اللهم عافني في سمعي ، اللهم عافني في بصري ، لا إله إلا أنت ، اللهم إني أعوذ بك من الكفر و الفقر ، وأعوذ بك من عذاب القبر ، لا إله إلا أنت.', target: 3 },
+                { id: 'e9', text: 'اللهم أنت ربي لا إله إلا أنت خلقتني وأنا عبدك ، وأنا على عهدك ووعدك ما استطعت ، أعوذ بك من شر ما صنعت ، أبوء لك بنعمتك علي ، وأبوء بذنبي ، فاغفر لی فإنه لا يغفر الذنوب إلا أنت.', target: 1 },
+                { id: 'e10', text: 'اللهم عالم الغيب والشهادة فاطر السموات والأرض ، رب كل شئ ومليكه ، أشهد أن لا إله إلا أنت ، أعوذ بك من شر نفسي ، ومن شر الشيطان وشركه ، وأن أقترف على نفسي سوءا أو أجره إلى مسلم.', target: 1 },
+                { id: 'e11', text: 'اللهم إني أسألك العافية في الدنيا والآخرة ، اللهم إني أسألك العفو و العافية في ديني ودنيای ، واهلي ، ومالی ، اللهم استر عوراتی ، وآمن روعاتي ، اللهم احفظني من بين يدي ومن خلفي وعن يميني وعن شمالي ، ومن فوقي ، وأعوذ بعظمتك أن أغتال من تحتي.', target: 1 },
+                { id: 'e12', text: 'اللهم بك أمسينا ، وبك أصبحنا ، وبك نحيا ، وبك نموت وإليك المصير.', target: 1 },
+                { id: 'e13', text: 'اللهم إنى امسيت اشهدك وأشهد حملة عرشك ، وملائكتك وجميع خلقك انك انت الله لا إله إلا أنت وحدك لا شريك لك وأن محمدا عبدك ورسولك.', target: 4 },
+                { id: 'e14', text: 'امسينا وامسى الملك لله ، والحمد لله ، لا إله إلا الله وحده لا شريك له ، له الملك وله الحمد وهو على كل شئ قدير ، رب أسألك خير مافي هذه الليلة وخير مابعدها ،وأعوذ بك من شر هذه الليلية ، وشر ما بعدها ، رب أعوذ بك من الكسل وسوء الكبر ، رب أعوذ بك من عذاب في النار ، وعذاب في القبر.', target: 1 },
+                { id: 'e15', text: 'امسينا على فطرة الإسلام ، وعلى كلمة الإخلاص ، وعلى دين نبينا محمد وعلى ملة أبينا إبراهيم حنيفا مسلما وما كان من المشركين.', target: 1 },
+                { id: 'e16', text: 'سبحان الله وبحمده.', target: 100 },
+                { id: 'e17', text: 'لا إله إلا الله وحده لا شريك له ، له الملك وله الحمد ، وهو على كل شئ قدير.', target: 100 },
+                { id: 'e18', text: 'سبحان الله وبحمده عدد خلقه ورضا نفسه وزنة عرشه ومداد كلماته.', target: 3 },
+                { id: 'e19', text: 'اللهم ما أمسى بي من نعمة أو بأحد من خلقك،فمنك وحدك لا شريك لك ، فلك الحمد ولك الشكر.', target: 1 },
+                { id: 'e20', text: 'أعوذ بكلمات الله التامات من شر ما خلق.', target: 3 },
+                { id: 'e21', text: 'الصلاة الإبراهيمية.', target: 10 }
+            ]
+        };
+
+        // حالة التطبيق
+        let currentCategory = 'morning';
+        let progress = {};
+
+        // تهيئة التقدم
+        function initProgress() {
+            progress = { morning: {}, evening: {} };
+            azkarData.morning.forEach(d => progress.morning[d.id] = 0);
+            azkarData.evening.forEach(d => progress.evening[d.id] = 0);
+        }
+
+        // تبديل الفئة (صباح / مساء)
+        function switchCategory(category) {
+            currentCategory = category;
+            
+            // تحديث أشكال الأزرار العلوية
+            const btnMorning = document.getElementById('btn-morning');
+            const btnEvening = document.getElementById('btn-evening');
+            
+            if(category === 'morning') {
+                btnMorning.className = "flex-1 py-2 rounded-md font-bold transition-all bg-islamic-goldlight text-islamic-dark shadow";
+                btnEvening.className = "flex-1 py-2 rounded-md font-bold transition-all text-white hover:bg-white/10";
+            } else {
+                btnEvening.className = "flex-1 py-2 rounded-md font-bold transition-all bg-islamic-goldlight text-islamic-dark shadow";
+                btnMorning.className = "flex-1 py-2 rounded-md font-bold transition-all text-white hover:bg-white/10";
+            }
+            
+            renderAzkar();
+            updateProgressBar();
+            
+            // إخفاء رسالة الإتمام عند التبديل
+            document.getElementById('completion-message').classList.add('hidden');
+
+            // العودة لأعلى الصفحة عند التبديل
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        // عرض الأذكار في الواجهة
+        function renderAzkar() {
+            const container = document.getElementById('azkar-container');
+            container.innerHTML = ''; // مسح المحتوى الحالي
+            
+            const currentList = azkarData[currentCategory];
+            
+            currentList.forEach((dhikr, index) => {
+                const currentCount = progress[currentCategory][dhikr.id];
+                const isCompleted = currentCount >= dhikr.target;
+                
+                // إنشاء عنصر البطاقة
+                const card = document.createElement('div');
+                card.id = `card-${dhikr.id}`;
+                card.className = `bg-white rounded-xl shadow-md p-5 mb-6 border border-gray-100 relative overflow-hidden animate-fade-in ${isCompleted ? 'card-completed' : ''}`;
+                card.style.animationDelay = `${index * 0.05}s`; // تأثير دخول متتابع
+                
+                // هيكل البطاقة الداخلي
+                card.innerHTML = `
+                    <div class="flex flex-col items-center">
+                        <div class="w-full text-justify text-xl md:text-2xl dhikr-text text-islamic-dark font-bold mb-6">
+                            ${dhikr.text}
+                        </div>
+                        
+                        <div class="flex items-center justify-between w-full mt-2 border-t border-gray-100 pt-4">
+                            <div class="flex flex-col items-center">
+                                <div class="text-gray-500 font-bold bg-gray-100 px-4 py-1 rounded-full text-sm">
+                                    التكرار: ${dhikr.target}
+                                </div>
+                                ${dhikr.target === 100 ? `<div class="text-gray-400 font-bold text-xs mt-1">التكرار 10</div>` : ''}
+                            </div>
+                            
+                            <div class="flex items-center gap-3">
+                                ${dhikr.target === 100 ? `
+                                <button 
+                                    id="btn10-${dhikr.id}"
+                                    onclick="incrementDhikr('${dhikr.id}', ${dhikr.target}, 10)"
+                                    class="counter-btn relative w-12 h-12 rounded-full flex items-center justify-center text-lg font-bold text-white focus:outline-none select-none shadow-md
+                                    ${isCompleted ? 'bg-islamic-green' : 'bg-teal-600 hover:bg-teal-700'}"
+                                    ${isCompleted ? 'disabled' : ''}
+                                >
+                                    ${isCompleted ? '<i class="fa-solid fa-check"></i>' : '+10'}
+                                </button>
+                                ` : ''}
+                                
+                                <button 
+                                    id="btn-${dhikr.id}"
+                                    onclick="incrementDhikr('${dhikr.id}', ${dhikr.target}, 1)"
+                                    class="counter-btn relative w-16 h-16 rounded-full flex items-center justify-center text-2xl font-bold text-white focus:outline-none select-none
+                                    ${isCompleted ? 'bg-islamic-green' : 'bg-islamic-gold hover:bg-yellow-500'}"
+                                    ${isCompleted ? 'disabled' : ''}
+                                >
+                                    ${isCompleted ? '<i class="fa-solid fa-check"></i>' : (dhikr.target - currentCount)}
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                
+                container.appendChild(card);
+            });
+        }
+
+        // زيادة العداد عند الضغط
+        function incrementDhikr(id, target, step = 1) {
+            if (progress[currentCategory][id] < target) {
+                progress[currentCategory][id] = Math.min(target, progress[currentCategory][id] + step);
+                
+                const currentCount = progress[currentCategory][id];
+                const btn = document.getElementById(`btn-${id}`);
+                const btn10 = document.getElementById(`btn10-${id}`); // قد يكون غير موجود
+                const card = document.getElementById(`card-${id}`);
+                
+                // تحديث نص الزر
+                if (currentCount >= target) {
+                    btn.innerHTML = '<i class="fa-solid fa-check"></i>';
+                    btn.classList.remove('bg-islamic-gold', 'hover:bg-yellow-500');
+                    btn.classList.add('bg-islamic-green');
+                    btn.disabled = true;
+                    
+                    if (btn10) {
+                        btn10.innerHTML = '<i class="fa-solid fa-check"></i>';
+                        btn10.classList.remove('bg-teal-600', 'hover:bg-teal-700');
+                        btn10.classList.add('bg-islamic-green');
+                        btn10.disabled = true;
+                    }
+                    
+                    card.classList.add('card-completed');
+                    
+                    // تمرير تلقائي بطيء للذكر التالي (اختياري، مريح للمستخدم)
+                    setTimeout(() => {
+                        const nextCard = card.nextElementSibling;
+                        if(nextCard && !nextCard.classList.contains('card-completed')){
+                            nextCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                        }
+                    }, 400);
+
+                } else {
+                    btn.innerText = target - currentCount;
+                }
+                
+                // إنشاء تأثير النبض على الزر الذي تم الضغط عليه
+                const clickedBtn = (step === 10 && btn10) ? btn10 : btn;
+                if (clickedBtn) {
+                    clickedBtn.style.transform = 'scale(0.85)';
+                    setTimeout(() => {
+                        clickedBtn.style.transform = 'scale(1)';
+                    }, 100);
+                }
+
+                updateProgressBar();
+            }
+        }
+
+        // تحديث شريط التقدم العام
+        function updateProgressBar() {
+            const currentList = azkarData[currentCategory];
+            let totalTargets = 0;
+            let currentTotal = 0;
+            
+            currentList.forEach(dhikr => {
+                totalTargets += dhikr.target;
+                currentTotal += progress[currentCategory][dhikr.id];
+            });
+            
+            const percentage = Math.round((currentTotal / totalTargets) * 100);
+            
+            document.getElementById('progress-bar').style.width = `${percentage}%`;
+            document.getElementById('progress-text').innerText = `${percentage}%`;
+
+            // إظهار رسالة الإتمام عند الوصول 100%
+            if (percentage === 100) {
+                const msg = document.getElementById('completion-message');
+                msg.classList.remove('hidden');
+                setTimeout(() => {
+                    msg.classList.add('hidden');
+                }, 5000); // إخفاء بعد 5 ثوان
+            }
+        }
+
+        // --- أكواد PWA (Progressive Web App) لتثبيت التطبيق ---
+        let deferredPrompt;
+        function initPWA() {
+            // 1. توليد ملف الـ Manifest برمجياً
+            const manifest = {
+                "name": "أذكار الصباح والمساء",
+                "short_name": "أذكار",
+                "start_url": window.location.href,
+                "display": "standalone",
+                "background_color": "#f4f9f4",
+                "theme_color": "#1b4332",
+                "icons": [{
+                    "src": "data:image/svg+xml;charset=utf-8," + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><rect width="512" height="512" rx="120" fill="#1b4332"/><text x="50%" y="55%" dominant-baseline="middle" text-anchor="middle" fill="#d4af37" font-size="160" font-family="Arial, sans-serif" font-weight="bold">أذكار</text></svg>'),
+                    "sizes": "512x512",
+                    "type": "image/svg+xml",
+                    "purpose": "any maskable"
+                }]
+            };
+            
+            const manifestBlob = new Blob([JSON.stringify(manifest)], {type: 'application/json'});
+            const manifestUrl = URL.createObjectURL(manifestBlob);
+            const link = document.createElement('link');
+            link.rel = 'manifest';
+            link.href = manifestUrl;
+            document.head.appendChild(link);
+
+            // 2. تسجيل Service Worker وهمي ليعتبر المتصفح التطبيق قابل للتثبيت
+            const swCode = `
+                self.addEventListener('install', e => self.skipWaiting());
+                self.addEventListener('activate', e => self.clients.claim());
+                self.addEventListener('fetch', e => {
+                    e.respondWith(
+                        fetch(e.request).catch(() => new Response('أنت غير متصل بالإنترنت'))
+                    );
+                });
+            `;
+            const swBlob = new Blob([swCode], {type: 'application/javascript'});
+            const swUrl = URL.createObjectURL(swBlob);
+
+            if ('serviceWorker' in navigator) {
+                navigator.serviceWorker.register(swUrl).catch(err => console.log('SW Error:', err));
+            }
+
+            // 3. التقاط حدث التثبيت وإظهار الزر
+            window.addEventListener('beforeinstallprompt', (e) => {
+                e.preventDefault(); // منع ظهور الموجه التلقائي
+                deferredPrompt = e; // حفظ الحدث
+                document.getElementById('install-container').classList.remove('hidden'); // إظهار الزر
+            });
+
+            // حدث الضغط على زر التثبيت
+            document.getElementById('install-btn').addEventListener('click', async () => {
+                if (deferredPrompt) {
+                    deferredPrompt.prompt();
+                    const { outcome } = await deferredPrompt.userChoice;
+                    if (outcome === 'accepted') {
+                        document.getElementById('install-container').classList.add('hidden');
+                    }
+                    deferredPrompt = null;
+                }
+            });
+        }
+
+        // بدء التطبيق عند تحميل الصفحة
+        window.onload = () => {
+            initProgress();
+            switchCategory('morning'); // الافتراضي هو الصباح
+            initPWA(); // تشغيل إعدادات التثبيت
+        };
+
+    </script>
+<script>if('serviceWorker' in navigator){window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js'));}</script>
+</body>
+</html>
