@@ -160,7 +160,7 @@
     <!-- رسالة إتمام الأذكار (مخفية افتراضياً) -->
     <div id="resume-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-5">
         <div class="bg-white rounded-3xl shadow-2xl w-full max-w-sm px-6 pt-10 pb-6 text-center">
-            <p class="text-gray-800 text-lg leading-loose mb-6">لم تكمل الأذكار في المرة السابقة.<br>هل تريد البدء من مكان ما توقفت، أم البدء من جديد؟</p>
+            <p id="resume-msg" class="text-gray-800 text-lg leading-loose mb-6">لم تكمل الأذكار في المرة السابقة.<br>هل تريد البدء من مكان ما توقفت، أم البدء من جديد؟</p>
             <button onclick="resumeContinue()" class="w-full bg-emerald-500 hover:bg-emerald-600 text-white font-bold text-xl py-4 rounded-2xl mb-3">أكمل من حيث توقفت</button>
             <button onclick="resumeRestart()" class="w-full bg-gray-200 hover:bg-gray-300 text-gray-900 font-bold text-xl py-4 rounded-2xl">ابدأ من جديد</button>
         </div>
@@ -285,7 +285,10 @@
                 const started = list.some(d => progress[category][d.id] > 0);
                 const finished = list.every(d => progress[category][d.id] >= d.target);
                 if (finished) { list.forEach(d => progress[category][d.id] = 0); saveProgress(); }
-                else if (started) askResume = true;
+                else if (started) {
+                    askResume = true;
+                    document.getElementById('resume-msg').innerHTML = 'لم تكمل قراءة ' + (category === 'morning' ? 'أذكار الصباح' : 'أذكار المساء') + ' في المرة السابقة.<br>هل تريد البدء من مكان ما توقفت، أم البدء من جديد؟';
+                }
             }
             document.getElementById('resume-modal').classList.toggle('hidden', !askResume);
 
