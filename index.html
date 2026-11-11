@@ -231,6 +231,7 @@
         // حالة التطبيق
         let currentCategory = 'morning';
         let progress = {};
+        const enteredThisSession = {};
 
         // تهيئة التقدم
         // حفظ مكان المستخدم: كل ورد بيتحفظ بتاريخ النهارده، ويبدأ من جديد في يوم جديد
@@ -276,6 +277,18 @@
                 btnMorning.className = "flex-1 py-2 rounded-md font-bold transition-all text-white hover:bg-white/10";
             }
             
+            // أول مرة يدخل الورد ده في الفتحة دي: لو خالص يبدأ من جديد، ولو ناقص يسأل يكمل ولا يبدأ من جديد
+            let askResume = false;
+            if (!enteredThisSession[category]) {
+                enteredThisSession[category] = true;
+                const list = azkarData[category];
+                const started = list.some(d => progress[category][d.id] > 0);
+                const finished = list.every(d => progress[category][d.id] >= d.target);
+                if (finished) { list.forEach(d => progress[category][d.id] = 0); saveProgress(); }
+                else if (started) askResume = true;
+            }
+            document.getElementById('resume-modal').classList.toggle('hidden', !askResume);
+
             renderAzkar();
             updateProgressBar();
             
@@ -516,9 +529,7 @@
             const swBlob = new Blob([swCode], {type: 'application/javascript'});
             const swUrl = URL.createObjectURL(swBlob);
 
-            if ('serviceWorker' in navigator) {
-                navigator.serviceWorker.register(swUrl).catch(err => console.log('SW Error:', err));
-            }
+            // التسجيل الفعلي للـ Service Worker في آخر الصفحة (sw.js)
 
             // 3. التقاط حدث التثبيت وإظهار الزر
             window.addEventListener('beforeinstallprompt', (e) => {
@@ -550,21 +561,11 @@
             const mins = now.getHours()*60 + now.getMinutes();
             switchCategory(mins >= asrByMonth[now.getMonth()] ? 'evening' : 'morning');
             // لو الورد متكمّلش المرة اللي فاتت، يسأل يكمل ولا يبدأ من جديد
-            const list = azkarData[currentCategory];
-            const started = list.some(d => progress[currentCategory][d.id] > 0);
-            const finished = list.every(d => progress[currentCategory][d.id] >= d.target);
-            if (finished) {
-                // لو الورد خلص المرة اللي فاتت، يبدأ من جديد تلقائيا بدل ما يفتح والكل مقروء
-                list.forEach(d => progress[currentCategory][d.id] = 0);
-                saveProgress();
-                renderAzkar();
-                updateProgressBar();
-            } else if (started) document.getElementById('resume-modal').classList.remove('hidden');
             initPWA(); // تشغيل إعدادات التثبيت
             keepScreenOn();
         };
 
     </script>
-<script>if('serviceWorker' in navigator){window.addEventListener('load',()=>{navigator.serviceWorker.register('./sw.js',{updateViaCache:'none'}).then(r=>{r.update();document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')r.update();});}).catch(()=>{});});let reloaded=false;navigator.serviceWorker.addEventListener('controllerchange',()=>{if(reloaded)return;reloaded=true;location.reload();});}</script>
+<script>if('serviceWorker' in navigator){window.addEventListener('load',()=>{navigator.serviceWorker.register('./sw.js',{updateViaCache:'none'}).catch(()=>{});});}</script>
 </body>
 </html>
