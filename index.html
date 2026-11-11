@@ -158,6 +158,14 @@
     </main>
 
     <!-- رسالة إتمام الأذكار (مخفية افتراضياً) -->
+    <div id="resume-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-5">
+        <div class="bg-white rounded-3xl shadow-2xl w-full max-w-sm px-6 pt-10 pb-6 text-center">
+            <p class="text-gray-800 text-lg leading-loose mb-6">لم تكمل الأذكار في المرة السابقة.<br>هل تريد البدء من مكان ما توقفت، أم البدء من جديد؟</p>
+            <button onclick="resumeContinue()" class="w-full bg-emerald-500 hover:bg-emerald-600 text-white font-bold text-xl py-4 rounded-2xl mb-3">أكمل من حيث توقفت</button>
+            <button onclick="resumeRestart()" class="w-full bg-gray-200 hover:bg-gray-300 text-gray-900 font-bold text-xl py-4 rounded-2xl">ابدأ من جديد</button>
+        </div>
+    </div>
+
     <div id="completion-message" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-6" onclick="if(event.target===this)this.classList.add('hidden')">
         <div class="bg-islamic-green text-white px-6 py-6 rounded-2xl shadow-2xl text-center border-2 border-islamic-gold animate-fade-in w-full max-w-xs">
             <i class="fa-solid fa-check-circle text-islamic-gold text-4xl mb-3"></i>
@@ -378,6 +386,21 @@
             setTimeout(() => { document.getElementById('exit-hint').classList.remove('hidden'); }, 300);
         }
 
+        // رسالة الاستكمال
+        function resumeContinue() {
+            document.getElementById('resume-modal').classList.add('hidden');
+            const next = document.querySelector('#azkar-container > div:not(.card-completed)');
+            if (next) setTimeout(() => next.scrollIntoView({ behavior: 'smooth', block: 'center' }), 150);
+        }
+        function resumeRestart() {
+            document.getElementById('resume-modal').classList.add('hidden');
+            azkarData[currentCategory].forEach(d => progress[currentCategory][d.id] = 0);
+            saveProgress();
+            renderAzkar();
+            updateProgressBar();
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
         // زيادة العداد عند الضغط
         function incrementDhikr(id, target, step = 1) {
             if (progress[currentCategory][id] < target) {
@@ -526,12 +549,11 @@
             const now = new Date();
             const mins = now.getHours()*60 + now.getMinutes();
             switchCategory(mins >= asrByMonth[now.getMonth()] ? 'evening' : 'morning');
-            // لو كان في النص، يروح لأول ذكر لسه ما خلصش
-            setTimeout(() => {
-                const anyDone = azkarData[currentCategory].some(d => progress[currentCategory][d.id] > 0);
-                const next = document.querySelector('#azkar-container > div:not(.card-completed)');
-                if (anyDone && next) next.scrollIntoView({ behavior: 'smooth', block: 'center' });
-            }, 600);
+            // لو الورد متكمّلش المرة اللي فاتت، يسأل يكمل ولا يبدأ من جديد
+            const list = azkarData[currentCategory];
+            const started = list.some(d => progress[currentCategory][d.id] > 0);
+            const finished = list.every(d => progress[currentCategory][d.id] >= d.target);
+            if (started && !finished) document.getElementById('resume-modal').classList.remove('hidden');
             initPWA(); // تشغيل إعدادات التثبيت
             keepScreenOn();
         };
