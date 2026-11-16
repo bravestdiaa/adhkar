@@ -477,8 +477,8 @@
             let currentTotal = 0;
             
             currentList.forEach(dhikr => {
-                totalTargets += dhikr.target;
-                currentTotal += progress[currentCategory][dhikr.id];
+                totalTargets += 1;
+                currentTotal += progress[currentCategory][dhikr.id] >= dhikr.target ? 1 : 0;
             });
             
             const percentage = currentTotal >= totalTargets ? 100 : Math.min(99, Math.floor((currentTotal / totalTargets) * 100));
